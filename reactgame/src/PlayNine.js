@@ -5,16 +5,12 @@ import "./App.css";
 import _ from 'lodash'
 
 const Stars = (props) => {
-    const numberofStars = 1 + Math.floor(Math.random()*9);
-    let stars = []
-    for (let i = 0; i < numberofStars; i++) {
-        stars.push(<i key={i} className="fa fa-star"></i>);
-    }
-
-
+    console.log(props);
     return (
         <div className="col-5">
-            {stars}
+            {_.range(props.numberOfStars).map(i =>
+                <i key={i} className="fa fa-star"></i>
+            )}
         </div>
     );
 }
@@ -22,7 +18,7 @@ const Stars = (props) => {
 const Button = (props) => {
     return (
         <div className ="col-2">
-            <button>=</button>
+            <button className="btn btn-secondary" disabled={props.selectedNumbers.length === 0}>=</button>
         </div>
     );
 }
@@ -30,16 +26,21 @@ const Button = (props) => {
 const Answer = (props) => {
     return (
         <div className="col-5">
-            <span>5</span>
+            {props.selectedNumbers.map((number, i) => 
+            <span onClick={() => props.onAnswerChanged(number)} key={i}>{number}</span>)}
         </div>
     );
 }
 
 const Numbers = (props) => {
+    const numberClassName = (number) => {
+        return props.selectedNumbers.indexOf(number) >= 0 ? 'selected' : '';
+    }
     return (
         <div className="card text-center">
             <div>
-                {Numbers.list.map((number, i) => <span key={i}>{number}</span>)}
+                {Numbers.list.map((number, i) => 
+                <span onClick={() => props.onNumberSelected(number)} key={i} className={numberClassName(number)}>{number}</span>)}
             </div>
         </div>
     );
@@ -48,18 +49,34 @@ const Numbers = (props) => {
 Numbers.list = _.range(1, 10);
 
 class Game extends React.Component {
+    state = {
+        selectedNumbers: [],
+        numberOfStars: 1 + Math.floor(Math.random()*9)
+    };
+    removeNumber = (numberToRemove) => {
+        this.setState((prevState) => ({
+            selectedNumbers: prevState.selectedNumbers.filter(number => number !== numberToRemove)
+        }));
+    };
+    selectNumber = (number) => {
+        if (this.state.selectedNumbers.indexOf(number) >= 0) { return; }
+        this.setState((prevState) => ({
+            selectedNumbers: prevState.selectedNumbers.concat([number])
+        }));
+    };
     render() {
+        const { selectedNumbers, numberOfStars } = this.state;
         return (
             <div className="container">
                 <h3>Play Nine</h3>
                 <hr/>
                 <div className="row">
-                    <Stars />
-                    <Button />
-                    <Answer />
+                    <Stars numberOfStars={numberOfStars} />
+                    <Button selectedNumbers={selectedNumbers} />
+                    <Answer selectedNumbers={selectedNumbers} onAnswerChanged={this.removeNumber} />
                 </div>
                 <br />
-                <Numbers />
+                <Numbers selectedNumbers={selectedNumbers} onNumberSelected={this.selectNumber} />
             </div>
         );
     };
